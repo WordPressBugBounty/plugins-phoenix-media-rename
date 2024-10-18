@@ -48,7 +48,7 @@ class Phoenix_Media_Rename {
 	 * @return array
 	 */
 	function add_filename_column($columns) {
-		$columns['filename'] = 'Filename';
+		$columns['filename'] = __('Filename', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN'));
 		return $columns;
 	}
 
@@ -144,23 +144,27 @@ class Phoenix_Media_Rename {
 	 */
 	function print_js() {
 		if ($this->is_media_rename_page) {
-			wp_enqueue_script(constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN'), plugins_url('js/scripts.min.js', dirname(__FILE__)), array('jquery'), '3.1.0');
+			wp_enqueue_script(constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN'), plugins_url('js/scripts.min.js', dirname(__FILE__)), '', '4.0.0');
 			?>
 
 			<script type="text/javascript">
 				MRSettings = {
 					'labels': {
-						'<?php echo constant("actionRename") ?>': '<?php echo __('Rename', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
-						'<?php echo constant("actionRenameRetitle") ?>': '<?php echo __('Rename & Retitle', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
-						'<?php echo constant("actionRetitle") ?>': '<?php echo __('Retitle', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
-						'<?php echo constant("actionRetitleFromPostTitle") ?>': '<?php echo __('Retitle from Post', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
-						'<?php echo constant("actionRenameFromPostTitle") ?>': '<?php echo __('Rename from Post', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
-						'<?php echo constant("actionRenameRetitleFromPostTitle") ?>': '<?php echo __('Rename & Retitle from Post', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>'
+						'<?php echo constant("actionRename") ?>': '<?php _e('Rename', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
+						'<?php echo constant("actionRenameRetitle") ?>': '<?php _e('Rename & Retitle', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
+						'<?php echo constant("actionRetitle") ?>': '<?php _e('Retitle', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
+						'<?php echo constant("actionRetitleFromPostTitle") ?>': '<?php _e('Retitle from Post', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
+						'<?php echo constant("actionRenameFromPostTitle") ?>': '<?php _e('Rename from Post', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
+						'<?php echo constant("actionRenameRetitleFromPostTitle") ?>': '<?php _e('Rename & Retitle from Post', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>'
 					}
 				};
 			</script>
 
 			<?php
+		}
+
+		if(get_current_screen()->id == 'settings_page_pmr-setting-admin') {
+			wp_enqueue_script(constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN'), plugins_url('js/options.min.js', dirname(__FILE__)), '', '4.0.0');
 		}
 	}
 
@@ -745,14 +749,14 @@ class Phoenix_Media_Rename {
 
 		//copy old file to new one
 		if (!@copy($file_abs_path, $new_file_abs_path)) {
-			$result = __('File renaming error! Tried to copy ' . $file_abs_path . ' to ' . $new_file_abs_path);
+			$result = printf(__('File renaming error! Tried to copy %1$s to %2$s.', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')), $file_abs_path , $new_file_abs_path);
 		};
 
 		update_attached_file($post_id , $new_filename);
 
 		//delete old media file, thumbnails will be deleted later
 		if (!@unlink($file_abs_path)) {
-			$result = __('File renaming error! Tried to delete ' . $file_abs_path);
+			$result = printf(__('File renaming error! Tried to delete %s.', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')), $file_abs_path);
 		};
 
 		return $result;
@@ -781,14 +785,14 @@ class Phoenix_Media_Rename {
 		try{
 			//copy old file to new one
 			if (!copy($file_abs_path, $new_file_abs_path)) {
-				$result = __('File renaming error! Tried to copy ' . $file_abs_path . ' to ' . $new_file_abs_path);
+				$result = printf(__('File renaming error! Tried to copy %1$s to %2$s.', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')), $file_abs_path , $new_file_abs_path);
 			};
 
 			update_attached_file($post_id, $new_filename);
 
 			//delete old media file, thumbnails will be deleted later
 			if (!unlink($file_abs_path)) {
-				$result = __('File renaming error! Tried to delete ' . $file_abs_path);
+				$result = printf(__('File renaming error! Tried to delete %s.', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')), $file_abs_path);
 			};
 		}catch(exception $e){
 			//reset error reporting settings
@@ -1049,6 +1053,7 @@ if (!function_exists('str_contains')) {
 }
 
 #region class file_info
+
 class pmr_file_info{
 	public $base_url;
 	public $file_path;
@@ -1096,5 +1101,5 @@ class pmr_file_info{
 
 		$this->new_file_rel_path = preg_replace('~[^/]+$~', $this->new_filename . '.' . $this->file_extension, $this->file_rel_path);
 		$this->new_file_abs_path = preg_replace('~[^/]+$~', $this->new_filename . '.' . $this->file_extension, $this->file_abs_path);
-		}
+	}
 }
