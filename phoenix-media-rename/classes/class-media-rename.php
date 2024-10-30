@@ -548,7 +548,7 @@ class Phoenix_Media_Rename {
 	 */
 	static function do_rename($attachment_id, $new_filename, $retitle = 0, $title_from_post = 0, $name_from_post = 0, $check_post_parent = true, $force_lowercase = false, $force_serializiation = false, $rename = true) {
 		//Variables
-		$options = new pmr_options();
+		$options = new phoenix_media_rename_options();
 		$post = get_post($attachment_id);
 
 		//Change the attachment post
