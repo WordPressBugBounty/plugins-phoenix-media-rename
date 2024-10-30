@@ -19,27 +19,27 @@ define("pluginElementor", "elementor/elementor.php");
 define("pluginAltTextAI", "alttext-ai/atai.php");
 define("pluginBeaverBuilerLite", "beaver-builder-lite-version/fl-builder.php");
 
-abstract class elementor_element
-{
-	const css = 0;
-	const data = 1;
-}
+// abstract class phoenix_media_rename_elementor_element
+// {
+// 	const css = 0;
+// 	const data = 1;
+// }
 
 #endregion
 
-if (pmr_plugins::is_plugin_active(constant("pluginAltTextAI"))){
-	$options = new pmr_options();
+if (phoenix_media_rename_plugins::is_plugin_active(constant("pluginAltTextAI"))){
+	$options = new phoenix_media_rename_options();
 
 	if ($options->option_enable_alttext_integration){
-		add_action('atai_alttext_generated', 'pmr_on_alttext_generated', 10, 2);
+		add_action('atai_alttext_generated', 'phoenix_media_rename_on_alttext_generated', 10, 2);
 	}
 
-	function pmr_on_alttext_generated($attachment_id, $alt_text) {
+	function phoenix_media_rename_on_alttext_generated($attachment_id, $alt_text) {
 		Phoenix_Media_Rename::do_rename($attachment_id, $alt_text);
 	}
 }
 
-class pmr_plugins{
+class phoenix_media_rename_plugins{
 
 	/**
 	 * check if plugin is active
@@ -88,7 +88,7 @@ class pmr_plugins{
 		//compose Smart Slider table name
 		$tablename = $wpdb->prefix . 'nextend2_smartslider3_slides';
 
-		if (! pmr_lib::table_exist($tablename)){
+		if (! phoenix_media_rename_lib::table_exist($tablename)){
 			//if table does not exist, exit and return false
 			return false;
 		}else{
@@ -103,7 +103,7 @@ class pmr_plugins{
 
 		$tablename = $wpdb->prefix . 'nextend2_image_storage';
 
-		if (pmr_lib::table_exist($tablename)){
+		if (phoenix_media_rename_lib::table_exist($tablename)){
 			//if table exist, change file name (unnecessary table, does not exit if table is missing)
 			$sqlQuery = "UPDATE ". $tablename ." SET image = REPLACE(image, %s, %s) WHERE image LIKE %s";
 
@@ -254,7 +254,7 @@ class pmr_plugins{
 	 * @return array
 	 */
 	static function update_shortpixel_metadata($result, $old_filename, $new_filename, $attachment_id, $file_path){
-		if (pmr_plugins::is_plugin_active(constant("pluginShortpixelImageOptimiser"))) {
+		if (phoenix_media_rename_plugins::is_plugin_active(constant("pluginShortpixelImageOptimiser"))) {
 			//change filename in thumnail list
 			$shortpixelKey = 'thumbsOptList';
 			$result = self::update_single_shortpixel_metadata($result, $shortpixelKey, $old_filename, $new_filename);
@@ -439,7 +439,7 @@ class pmr_plugins{
 	static function update_elementor_data($post_id, $key = '', $searches = '', $replaces = ''){
 		global $wpdb;
 
-		if (pmr_plugins::is_plugin_active(constant("pluginElementor"))) {
+		if (phoenix_media_rename_plugins::is_plugin_active(constant("pluginElementor"))) {
 			$table_name = $wpdb->prefix . 'postmeta';
 
 			switch ($key){
@@ -482,8 +482,8 @@ class pmr_plugins{
 				break;
 				default:
 					//update wp_postmeta
-					// $meta[0] = pmr_lib::unserialize_deep($meta[0]);
-					// $new_meta = pmr_lib::replace_media_urls($meta[0], $searches, $replaces);
+					// $meta[0] = phoenix_media_rename_lib::unserialize_deep($meta[0]);
+					// $new_meta = phoenix_media_rename_lib::replace_media_urls($meta[0], $searches, $replaces);
 					// //there is an issue with Elementor, check when _wp_page_template changes
 					// if ($new_meta != $meta[0]) update_post_meta($post_id, $key, $new_meta, $meta[0]);
 			}
@@ -503,7 +503,7 @@ class pmr_plugins{
 	 * @return void
 	 */
 	static function update_beaver_builder_data($post_id, $searches, $replaces){
-		if (pmr_plugins::is_plugin_active(constant("pluginBeaverBuilerLite"))) {
+		if (phoenix_media_rename_plugins::is_plugin_active(constant("pluginBeaverBuilerLite"))) {
 			//updates draft and published content
 			for ($i = 0; $i < sizeof($searches); $i++){
 				self::update_beaver_builder_meta($post_id, '_fl_builder_draft', $searches[$i], $replaces[$i]);

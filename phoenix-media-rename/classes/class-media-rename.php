@@ -17,7 +17,7 @@ define("actionRenameRetitleFromPostTitle", "rename_retitle_from_post_title");
 define("success", "pmr_renamed");
 define("pmrTableName", "pmr_status");
 
-abstract class Operation
+abstract class phoenix_media_rename_operation
 {
 	const search = 0;
 	const replace = 1;
@@ -65,7 +65,7 @@ class Phoenix_Media_Rename {
 			//set bulk rename process as stopped
 			$this->reset_bulk_rename();
 
-			$file_parts = pmr_lib::get_file_parts($post_id);
+			$file_parts = phoenix_media_rename_lib::get_file_parts($post_id);
 			echo $this->get_filename_field($post_id, $file_parts['filename'], $file_parts['extension']);
 		}
 	}
@@ -79,7 +79,7 @@ class Phoenix_Media_Rename {
 	 */
 	function add_filename_field($form_fields, $post) {
 		if (isset($GLOBALS['post']) && $GLOBALS['post']->post_type=='attachment') {
-			$file_parts = pmr_lib::get_file_parts($GLOBALS['post']->ID);
+			$file_parts = phoenix_media_rename_lib::get_file_parts($GLOBALS['post']->ID);
 			$form_fields['mr_filename']=array(
 				'label' => __('Filename', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')),
 				'input' => 'html',
@@ -336,7 +336,7 @@ class Phoenix_Media_Rename {
 						$current_image_index = $matches[0];
 
 						//check if image index start with '0'
-						$zeroes = pmr_lib::starts_with($current_image_index, '0');
+						$zeroes = phoenix_media_rename_lib::starts_with($current_image_index, '0');
 
 						if ($zeroes != -1){
 							//image index start with one or more '0'
@@ -598,18 +598,18 @@ class Phoenix_Media_Rename {
 		else {
 			//renaming is enabled
 
-			$file_info = new pmr_file_info($attachment_id, $new_filename, $options, $post_parent_category);
+			$file_info = new phoenix_media_rename_file_info($attachment_id, $new_filename, $options, $post_parent_category);
 
-			if (pmr_plugins::is_plugin_active(constant("pluginAmazonS3AndCloudfront"))) {
+			if (phoenix_media_rename_plugins::is_plugin_active(constant("pluginAmazonS3AndCloudfront"))) {
 				//plugin is active
 				add_filter('as3cf_get_attached_file_copy_back_to_local', '__return_true');
 			}
 
 			//attachment miniatures
-			$searches = self::get_attachment_urls($attachment_id, Operation::search, $file_info, $file_info->new_filename);
+			$searches = self::get_attachment_urls($attachment_id, phoenix_media_rename_operation::search, $file_info, $file_info->new_filename);
 
 			//Validations
-			$validation_message = pmr_lib::validate_filename($post, $attachment_id, $options, $file_info);
+			$validation_message = phoenix_media_rename_lib::validate_filename($post, $attachment_id, $options, $file_info);
 
 			if ($validation_message != ''){
 				//validation error: stop renaming process and notify user
@@ -652,7 +652,7 @@ class Phoenix_Media_Rename {
 				wp_update_attachment_metadata($attachment_id, $metas);
 
 				// Replace the old with the new media link in the content of all posts and metas
-				$replaces = self::get_attachment_urls($attachment_id, Operation::replace, $file_info, $file_info->new_filename);
+				$replaces = self::get_attachment_urls($attachment_id, phoenix_media_rename_operation::replace, $file_info, $file_info->new_filename);
 
 				$post_types = get_post_types();
 
@@ -674,28 +674,28 @@ class Phoenix_Media_Rename {
 
 				do_action('pmr_renaming_successful', $file_info->file_old_filename, $file_info->new_filename);
 
-				if (pmr_plugins::is_plugin_active(constant("pluginWPML"))) {
+				if (phoenix_media_rename_plugins::is_plugin_active(constant("pluginWPML"))) {
 					//plugin is active
 					//Updating WPML tables
-					pmr_plugins::update_wpml($attachment_id);
+					phoenix_media_rename_plugins::update_wpml($attachment_id);
 				}
 
-				if (pmr_plugins::is_plugin_active(constant("pluginSmartSlider3"))) {
+				if (phoenix_media_rename_plugins::is_plugin_active(constant("pluginSmartSlider3"))) {
 					//plugin is active
 					//Updating SmartSlider 3 tables
-					pmr_plugins::update_smartslider($file_info->file_old_filename, $file_info->new_filename, $file_info->file_extension);
+					phoenix_media_rename_plugins::update_smartslider($file_info->file_old_filename, $file_info->new_filename, $file_info->file_extension);
 				}
 
-				if (pmr_plugins::is_plugin_active(constant("pluginRedirection"))) {
+				if (phoenix_media_rename_plugins::is_plugin_active(constant("pluginRedirection"))) {
 					//plugin is active
 					//Adding Redirection from old ORL to the new one
-					pmr_plugins::add_redirection($file_info->file_old_filename, $file_info->new_filename, $file_info->file_extension, $file_info->file_subfolder, $options->option_create_redirection, constant("pluginRedirection"));
+					phoenix_media_rename_plugins::add_redirection($file_info->file_old_filename, $file_info->new_filename, $file_info->file_extension, $file_info->file_subfolder, $options->option_create_redirection, constant("pluginRedirection"));
 				}
 
-				if (pmr_plugins::is_plugin_active(constant("pluginRankMath"))) {
+				if (phoenix_media_rename_plugins::is_plugin_active(constant("pluginRankMath"))) {
 					//plugin is active
 					//Adding Redirection from old ORL to the new one
-					pmr_plugins::add_redirection($file_info->file_old_filename, $file_info->new_filename, $file_info->file_extension, $file_info->file_subfolder, $options->option_create_redirection, constant("pluginRankMath"));
+					phoenix_media_rename_plugins::add_redirection($file_info->file_old_filename, $file_info->new_filename, $file_info->file_extension, $file_info->file_subfolder, $options->option_create_redirection, constant("pluginRankMath"));
 				}
 
 				return 1;
@@ -708,7 +708,7 @@ class Phoenix_Media_Rename {
 	 *
 	 * @param object $options Phoenix Media Rename options
 	 * @param integer $post_id id of the post to update (post_type attachment)
-	 * @param pmr_file_info $file_parts filename elements
+	 * @param phoenix_media_rename_file_info $file_parts filename elements
 	 * @return string error message
 	 */
 	private static function rename_files($options, $post_id, $file_info){
@@ -841,17 +841,17 @@ class Phoenix_Media_Rename {
 				$metas = get_post_meta($post->ID);
 				foreach ($metas as $key => $meta) {
 					if (str_contains($key, '_elementor_')){
-						pmr_plugins::update_elementor_data($post->ID, $key, $searches, $replaces);
+						phoenix_media_rename_plugins::update_elementor_data($post->ID, $key, $searches, $replaces);
 					} else {
 							//update wp_postmeta
-							$meta[0] = pmr_lib::unserialize_deep($meta[0]);
-							$new_meta = pmr_lib::replace_media_urls($meta[0], $searches, $replaces);
+							$meta[0] = phoenix_media_rename_lib::unserialize_deep($meta[0]);
+							$new_meta = phoenix_media_rename_lib::replace_media_urls($meta[0], $searches, $replaces);
 							if ($new_meta != $meta[0]) update_post_meta($post->ID, $key, $new_meta, $meta[0]);
 					}
 				}
 
 				//updating Beaver Builder metadata
-				pmr_plugins::update_beaver_builder_data($post->ID, $searches, $replaces);
+				phoenix_media_rename_plugins::update_beaver_builder_data($post->ID, $searches, $replaces);
 			}
 
 			$i++;
@@ -875,7 +875,7 @@ class Phoenix_Media_Rename {
 		$result = $old_meta;
 
 		//update ShortPixel thumbnails data
-		$result = pmr_plugins::update_shortpixel_metadata($result, $file_info->file_old_filename, $file_info->new_filename, $attachment_id, $file_info->file_path);
+		$result = phoenix_media_rename_plugins::update_shortpixel_metadata($result, $file_info->file_old_filename, $file_info->new_filename, $attachment_id, $file_info->file_path);
 
 		//replace original filename (needed to ensure correct wp-cli management of thumbnails renegeration)
 		if (array_key_exists('original_image', $result)){
@@ -979,8 +979,8 @@ class Phoenix_Media_Rename {
 	 *
 	 * @param integer $attachment_id id of the attachement to change
 	 * @param boolean $remove_suffix true: remove the -scaled suffix
-	 * @param Operation $operation kind of operation (Search/Replace)
-	 * @param pmr_file_info $file_parts filename elements
+	 * @param phoenix_media_rename_operation $operation kind of operation (Search/Replace)
+	 * @param phoenix_media_rename_file_info $file_parts filename elements
 	 * @param string $new_filename the new filename
 	 * @return array
 	 */
@@ -991,7 +991,7 @@ class Phoenix_Media_Rename {
 
 			if ($file_parts->original_filename){
 				//if original_image exists, rename also the original file
-				if (($operation == Operation::search)) {
+				if (($operation == phoenix_media_rename_operation::search)) {
 					//if operation is replace, replace original filename with the new one
 					$urls[] = $file_parts->base_url . '/' . $file_parts->original_filename . '.' . $file_parts->file_extension;
 				} else {
@@ -1011,7 +1011,7 @@ class Phoenix_Media_Rename {
 	/**
 	 * Generate full filename (path + filename) for a file
 	 *
-	 * @param pmr_file_info $file_parts filename elements
+	 * @param phoenix_media_rename_file_info $file_parts filename elements
 	 * @param string $new_filename the new filename (without extension)
 	 * @return string the new full filename
 	 */
@@ -1052,9 +1052,9 @@ if (!function_exists('str_contains')) {
 	}
 }
 
-#region class file_info
+#region class phoenix_media_rename_file_info
 
-class pmr_file_info{
+class phoenix_media_rename_file_info{
 	public $base_url;
 	public $file_path;
 	public $file_subfolder;
@@ -1077,11 +1077,11 @@ class pmr_file_info{
 	 *
 	 * @param integer $attachment_id ID of the post of the media file (post_type: attachment)
 	 * @param string $new_filename new file name
-	 * @param pmr_options $options Phoenix Media Rename options
+	 * @param phoenix_media_rename_options $options Phoenix Media Rename options
 	 * @param string $post_parent_category name of the main category of the post parent
 	 */
 	public function __construct($attachment_id, $new_filename, $options, $post_parent_category){
-		$file_parts = pmr_lib::get_file_parts($attachment_id);
+		$file_parts = phoenix_media_rename_lib::get_file_parts($attachment_id);
 		$this->new_filename_unsanitized = $new_filename;
 		$this->base_url = $file_parts['baseurl'];
 		$this->file_path = $file_parts['filepath'];
@@ -1093,7 +1093,7 @@ class pmr_file_info{
 		$this->filename = $file_parts['filename'];
 		$this->original_filename = $file_parts['originalfilename'];
 		$this->new_filename = $new_filename;
-		$this->new_filename = pmr_lib::clear_filename($options, $post_parent_category, $this);
+		$this->new_filename = phoenix_media_rename_lib::clear_filename($options, $post_parent_category, $this);
 
 		$this->file_abs_path = $this->file_path . $this->file_old_filename . '.' .$this->file_extension;
 		$this->file_abs_dir = $this->file_path;

@@ -4,12 +4,12 @@
 *
 */
 
-class pmr_lib{
+class phoenix_media_rename_lib{
 
 	/**
 	 * Generate the complete filename and sanitize it (if required)
 	 *
-	 * @param pmr_options $options Phoenix Media Rename options
+	 * @param phoenix_media_rename_options $options Phoenix Media Rename options
 	 * @param string $new_filename new name for the media file
 	 * @param bool $file_edited true: file has been edited
 	 * @param string $file_filename_ends_with file suffix added by WordPress (-scaled)
@@ -67,8 +67,8 @@ class pmr_lib{
 
 		//add trailer to filename only if it is not already present
 		if (($options->option_category_filename_trailer || $options->option_filename_trailer != "")
-		&& ! (pmr_lib::ends_with($result, $filename_trailer))
-		&& ! (pmr_lib::ends_with($result, sanitize_file_name($filename_trailer)))){
+		&& ! (phoenix_media_rename_lib::ends_with($result, $filename_trailer))
+		&& ! (phoenix_media_rename_lib::ends_with($result, sanitize_file_name($filename_trailer)))){
 			$result = $result . ' ' . $filename_trailer;
 		} else{
 			//no trailer entered by user
@@ -93,7 +93,7 @@ class pmr_lib{
 		}
 
 		try{
-			if (pmr_plugins::is_plugin_active(constant("pluginArchivarixExternalImagesImporter"))) {
+			if (phoenix_media_rename_plugins::is_plugin_active(constant("pluginArchivarixExternalImagesImporter"))) {
 				//plugin is active, remove last . added by archivarix
 				$result = rtrim($result, '.');
 			}
@@ -108,8 +108,8 @@ class pmr_lib{
 	 *
 	 * @param WP_Post $post WordPress post object
 	 * @param integer $attachment_id ID of the post to update
-	 * @param pmr_options $options Phoenix Media Rename options
-	 * @param pmr_file_info $file_info filename elements
+	 * @param phoenix_media_rename_options $options Phoenix Media Rename options
+	 * @param phoenix_media_rename_file_info $file_info filename elements
 	 * @return string error message
 	 */
 	public static function validate_filename($post, $attachment_id, $options, $file_info){
@@ -404,7 +404,7 @@ class pmr_lib{
 	 */
 	private static function increment_filename($filename){
 		//if filename ends with '-scaled', remove the string
-		if (pmr_lib::ends_with($filename, '-scaled')){
+		if (phoenix_media_rename_lib::ends_with($filename, '-scaled')){
 			$filename = substr($filename, 0, strlen($filename) - strlen('-scaled'));
 			$add_suffix = true;
 		} else {
