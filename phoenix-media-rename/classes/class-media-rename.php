@@ -6,26 +6,30 @@
 
 require_once('class-plugins.php');
 
-#region constants
-
-define("actionRename", "rename");
-define("actionRenameRetitle", "rename_retitle");
-define("actionRetitle", "retitle");
-define("actionRetitleFromPostTitle", "retitle_from_post_title");
-define("actionRenameFromPostTitle", "rename_from_post_title");
-define("actionRenameRetitleFromPostTitle", "rename_retitle_from_post_title");
-define("success", "pmr_renamed");
-define("pmrTableName", "pmr_status");
-
+/**
+ * Enumerative type operation
+ */
 abstract class phoenix_media_rename_operation
 {
 	const search = 0;
 	const replace = 1;
 }
 
-#endregion
-
 class Phoenix_Media_Rename {
+	#region constants
+
+	private const actionRename = 'rename';
+	private const actionRenameRetitle = 'rename_retitle';
+	private const actionRetitle = 'retitle';
+	private const actionRetitleFromPostTitle = 'retitle_from_post_title';
+	private const actionRenameFromPostTitle = 'rename_from_post_title';
+	private const actionRenameRetitleFromPostTitle = 'rename_retitle_from_post_title';
+	private const success = 'pmr_renamed';
+	private const phoenix_media_rename_table_name = 'pmr_status';
+
+	// define ('PHOENIX_MEDIA_RENAME_BULK_STATUS', 'phoenix-media-rename');
+
+	#endregion
 
 	private $is_media_rename_page;
 	private $nonce_printed;
@@ -96,13 +100,16 @@ class Phoenix_Media_Rename {
 	 */
 	function reset_bulk_rename(){
 		//set index for group rename
-		$this->write_db_value('current_image_index', 0);
+		$this->set_cookie('phoenix_media_rename_current_image_index', '0');
+
 		//reset the bulk rename flag
-		$this->write_db_value('bulk_rename_in_progress', false);
+		$this->set_cookie('phoenix_media_rename_bulk_rename_in_progress', 'false');
+
 		//reset the bulk rename from post flag
-		$this->write_db_value('bulk_rename_from_post_in_progress', false);
+		$this->set_cookie('phoenix_media_rename_bulk_rename_from_post_in_progress', 'false');
+
 		//reset the bulk rename filename header
-		$this->write_db_value('bulk_filename_header', '');
+		$this->set_cookie('phoenix_media_rename_bulk_rename_bulk_filename_header', '');
 }
 
 	/**
@@ -112,16 +119,16 @@ class Phoenix_Media_Rename {
 	 */
 	function handle_bulk_pnx_rename_form_submit() {
 		if (
-			array_search(constant("actionRename"), $_REQUEST, true) !== FALSE
-			|| array_search(constant("actionRenameRetitle"), $_REQUEST, true) !== FALSE
-			|| array_search(constant("actionRetitle"), $_REQUEST, true) !== FALSE
-			|| array_search(constant("actionRetitleFromPostTitle"), $_REQUEST, true) !== FALSE
+			array_search(self::actionRename, $_REQUEST, true) !== FALSE
+			|| array_search(self::actionRenameRetitle, $_REQUEST, true) !== FALSE
+			|| array_search(self::actionRetitle, $_REQUEST, true) !== FALSE
+			|| array_search(self::actionRetitleFromPostTitle, $_REQUEST, true) !== FALSE
 			) {
 
 			//set bulk rename process as stopped
 			$this->reset_bulk_rename();
 
-			wp_redirect(add_query_arg(array(constant("success") => 1), wp_get_referer()));
+			wp_redirect(add_query_arg(array(self::success => 1), wp_get_referer()));
 			exit;
 		}
 	}
@@ -132,7 +139,7 @@ class Phoenix_Media_Rename {
 	 * @return void
 	 */
 	function show_bulk_pnx_rename_success_notice() {
-		if(isset($_REQUEST[constant("success")])) {
+		if(isset($_REQUEST[self::success])) {
 			echo '<div class="updated"><p>'. __('Medias successfully renamed!', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) .'</p></div>';
 		}
 	}
@@ -150,12 +157,12 @@ class Phoenix_Media_Rename {
 			<script type="text/javascript">
 				MRSettings = {
 					'labels': {
-						'<?php echo constant("actionRename") ?>': '<?php _e('Rename', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
-						'<?php echo constant("actionRenameRetitle") ?>': '<?php _e('Rename & Retitle', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
-						'<?php echo constant("actionRetitle") ?>': '<?php _e('Retitle', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
-						'<?php echo constant("actionRetitleFromPostTitle") ?>': '<?php _e('Retitle from Post', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
-						'<?php echo constant("actionRenameFromPostTitle") ?>': '<?php _e('Rename from Post', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
-						'<?php echo constant("actionRenameRetitleFromPostTitle") ?>': '<?php _e('Rename & Retitle from Post', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>'
+						'<?php echo self::actionRename ?>': '<?php _e('Rename', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
+						'<?php echo self::actionRenameRetitle ?>': '<?php _e('Rename & Retitle', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
+						'<?php echo self::actionRetitle ?>': '<?php _e('Retitle', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
+						'<?php echo self::actionRetitleFromPostTitle ?>': '<?php _e('Retitle from Post', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
+						'<?php echo self::actionRenameFromPostTitle ?>': '<?php _e('Rename from Post', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>',
+						'<?php echo self::actionRenameRetitleFromPostTitle ?>': '<?php _e('Rename & Retitle from Post', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')) ?>'
 					}
 				};
 			</script>
@@ -216,7 +223,7 @@ class Phoenix_Media_Rename {
 		global $wpdb;
 
 		//check if there are values in table
-		$result = $wpdb->get_var("SELECT " . $field . " FROM " . $wpdb->prefix . constant('pmrTableName'));
+		$result = $wpdb->get_var("SELECT " . $field . " FROM " . $wpdb->prefix . self::phoenix_media_rename_table_name);
 
 		return $result;
 	}
@@ -232,19 +239,19 @@ class Phoenix_Media_Rename {
 		global $wpdb;
 
 		//check if there are values in table
-		$records = $wpdb->get_var("SELECT IFNULL(COUNT(*), 0) FROM " . $wpdb->prefix . constant('pmrTableName'));
+		$records = $wpdb->get_var("SELECT IFNULL(COUNT(*), 0) FROM " . $wpdb->prefix . self::phoenix_media_rename_table_name);
 
 		if ($records > 1){
 			//error in table content, truncate table to reset data
 			$wpdb->query(
 				$wpdb->prepare(
-					"TRUNCATE TABLE " . $wpdb->prefix . constant('pmrTableName')
+					"TRUNCATE TABLE " . $wpdb->prefix . self::phoenix_media_rename_table_name
 				)
 			);
 		}elseif ($records == 0){
 			//table is empty, insert new row
 			$wpdb->insert(
-				$wpdb->prefix . constant('pmrTableName'), 
+				$wpdb->prefix . self::phoenix_media_rename_table_name, 
 				array(
 					$field => $value, 
 				)
@@ -252,7 +259,7 @@ class Phoenix_Media_Rename {
 		} else {
 			//table contains a record, update data
 			$wpdb->update(
-				$wpdb->prefix . constant('pmrTableName'), 
+				$wpdb->prefix . self::phoenix_media_rename_table_name, 
 				array(
 					$field => $value, 
 				),
@@ -277,7 +284,10 @@ class Phoenix_Media_Rename {
 			$title_from_post = $this->title_from_post();
 
 			$new_filename = $_REQUEST['new_filename'];
-			$bulk_rename_in_progress = $this->read_db_value('bulk_rename_in_progress');
+
+			//get bulk rename status
+			$bulk_rename_in_progress = $_COOKIE['phoenix_media_rename_bulk_rename_in_progress'];
+
 			$attachment_id = $_REQUEST['post_id'];
 			$force_serializiation = false;
 
@@ -303,17 +313,19 @@ class Phoenix_Media_Rename {
 						$force_serializiation = true;
 					};
 
-				}elseif ($bulk_rename_in_progress){
+				} elseif ($bulk_rename_in_progress == 'true'){
 					//bulk rename in progress: build filename
-					//increment image name index
-					$current_image_index = $this->read_db_value('current_image_index');
-					$bulk_filename_header = $this->read_db_value('bulk_filename_header');
+					$current_image_index = (int)$_COOKIE['phoenix_media_rename_current_image_index'];
 
-					$this->write_db_value('current_image_index', ++$current_image_index);
+					//get filename header
+					$bulk_filename_header = $_COOKIE['phoenix_media_rename_bulk_filename_header'];
+
+					//increment image name index
+					$this->set_cookie('phoenix_media_rename_current_image_index', ++$current_image_index);
 
 					//create filename
 					$new_filename = $this->build_filename($bulk_filename_header, $current_image_index);
-				}else{
+				} else {
 					//bulk rename not in progress: check if filename contains {}
 					//search pattern {number}
 					$re = '/[{][0-9]{1,10}[}]/m';
@@ -323,7 +335,7 @@ class Phoenix_Media_Rename {
 					//if new filename contains {number}, serialize following file names
 					if ($matches){
 						//notify the start of bulk rename process
-						$this->write_db_value('bulk_rename_in_progress', true);
+						$this->set_cookie("phoenix_media_rename_bulk_rename_in_progress", 'true');
 
 						//extract file header
 						$bulk_filename_header = preg_replace($re, '', $new_filename);
@@ -347,13 +359,13 @@ class Phoenix_Media_Rename {
 							$current_image_index = intval($current_image_index);
 						}
 
-						$this->write_db_value('bulk_filename_header', $bulk_filename_header);
-
-						$this->write_db_value('current_image_index', $current_image_index);
+						//update bulk rename info
+						$this->set_cookie("phoenix_media_rename_bulk_filename_header", $bulk_filename_header);
+						$this->set_cookie("phoenix_media_rename_current_image_index", $current_image_index);
 
 						//create filename
 						$new_filename = $this->build_filename($bulk_filename_header, $current_image_index);
-					}	
+					}
 				}
 
 				echo $this->do_rename($attachment_id, $new_filename, $retitle, $title_from_post, $name_from_post, true, false, $force_serializiation, $rename);
@@ -372,8 +384,8 @@ class Phoenix_Media_Rename {
 	 */
 	private function title_from_post(){
 		//if action is "actionRenameFromPostTitle" or "actionRenameRetitleFromPostTitle" retrieve title for post related to media file to generate attachment title
-		if ($_REQUEST['type'] == constant("actionRenameRetitleFromPostTitle")
-			|| $_REQUEST['type'] == constant("actionRetitleFromPostTitle")
+		if ($_REQUEST['type'] == self::actionRenameRetitleFromPostTitle
+			|| $_REQUEST['type'] == self::actionRetitleFromPostTitle
 			) {
 			$result = true;
 		}else{
@@ -391,8 +403,8 @@ class Phoenix_Media_Rename {
 	private function name_from_post(){
 
 		//if action is "actionRenameFromPostTitle" or "actionRenameRetitleFromPostTitle" retrieve title for post related to media file to generate filename
-		if (($_REQUEST['type'] == constant("actionRenameFromPostTitle"))
-			|| ($_REQUEST['type'] == constant("actionRenameRetitleFromPostTitle"))
+		if (($_REQUEST['type'] == self::actionRenameFromPostTitle)
+			|| ($_REQUEST['type'] == self::actionRenameRetitleFromPostTitle)
 			){
 			$result = true;
 		}else{
@@ -412,8 +424,8 @@ class Phoenix_Media_Rename {
 		$result = true;
 
 		if (
-			$_REQUEST['type'] == constant("actionRetitle")
-			|| $_REQUEST['type'] == constant("actionRetitleFromPostTitle")
+			$_REQUEST['type'] == self::actionRetitle
+			|| $_REQUEST['type'] == self::actionRetitleFromPostTitle
 			) {
 			//disable renaming if needed
 			$result = false;
@@ -433,10 +445,10 @@ class Phoenix_Media_Rename {
 
 		//check if retitle is needed
 		if (
-			$_REQUEST['type'] == constant("actionRenameRetitleFromPostTitle")
-			|| $_REQUEST['type'] == constant("actionRetitleFromPostTitle")
-			|| $_REQUEST['type'] == constant("actionRenameRetitle")
-			|| $_REQUEST['type'] == constant("actionRetitle")
+			$_REQUEST['type'] == self::actionRenameRetitleFromPostTitle
+			|| $_REQUEST['type'] == self::actionRetitleFromPostTitle
+			|| $_REQUEST['type'] == self::actionRenameRetitle
+			|| $_REQUEST['type'] == self::actionRetitle
 			) {
 			//enable retitling if needed
 			$result = true;
@@ -688,13 +700,13 @@ class Phoenix_Media_Rename {
 
 				if (phoenix_media_rename_plugins::is_plugin_active(constant("pluginRedirection"))) {
 					//plugin is active
-					//Adding Redirection from old ORL to the new one
+					//Adding Redirection from old URL to the new one
 					phoenix_media_rename_plugins::add_redirection($file_info->file_old_filename, $file_info->new_filename, $file_info->file_extension, $file_info->file_subfolder, $options->option_create_redirection, constant("pluginRedirection"));
 				}
 
 				if (phoenix_media_rename_plugins::is_plugin_active(constant("pluginRankMath"))) {
 					//plugin is active
-					//Adding Redirection from old ORL to the new one
+					//Adding Redirection from old URL to the new one
 					phoenix_media_rename_plugins::add_redirection($file_info->file_old_filename, $file_info->new_filename, $file_info->file_extension, $file_info->file_subfolder, $options->option_create_redirection, constant("pluginRankMath"));
 				}
 
@@ -917,7 +929,7 @@ class Phoenix_Media_Rename {
 	 * Delete thumbnail files from upload folder
 	 *
 	 * @param integer $attachment_id id of the post of the media file (post_type: attachment)
-	 * @param array $$option_debug_mode true: enable debug messages, false: disable debug messages
+	 * @param array $option_debug_mode true: enable debug messages, false: disable debug messages
 	 * @return void
 	 */
 	static function delete_files($attachment_id, $option_debug_mode){
@@ -951,6 +963,22 @@ class Phoenix_Media_Rename {
 	}
 
 #region support functions
+
+	/**
+	 * Sets a cookie
+	 *
+	 * @param string $name name of the cookie
+	 * @param string $value value of the cookie
+	 * @return void
+	 */
+	private function set_cookie($name, $value){
+		$cookie_options = array (
+			'expires' => time() + 3600, // Expires in 1 hour
+			'samesite' => 'Strict'
+			);
+
+		setcookie($name, $value, $cookie_options);
+	}
 
 	/**
 	 * add support for calling Phoenix Media Rename from frontend
