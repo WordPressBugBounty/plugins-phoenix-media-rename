@@ -25,7 +25,6 @@ class Phoenix_Media_Rename {
 	private const actionRenameFromPostTitle = 'rename_from_post_title';
 	private const actionRenameRetitleFromPostTitle = 'rename_retitle_from_post_title';
 	private const success = 'pmr_renamed';
-	private const phoenix_media_rename_table_name = 'pmr_status';
 
 	// define ('PHOENIX_MEDIA_RENAME_BULK_STATUS', 'phoenix-media-rename');
 
@@ -151,6 +150,11 @@ class Phoenix_Media_Rename {
 	 */
 	function print_js() {
 		if ($this->is_media_rename_page) {
+			//register localizable strings for js
+			$translation_array = array(
+				'no_action_warning' => __('No bulk action selected.
+Please select a bulk action before pressing the "Apply" button.', constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN')),
+			);
 			wp_enqueue_script(constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN'), plugins_url('js/scripts.min.js', dirname(__FILE__)), '', '4.0.1');
 			?>
 
@@ -168,6 +172,8 @@ class Phoenix_Media_Rename {
 			</script>
 
 			<?php
+			//localize registered js
+			wp_localize_script(constant('PHOENIX_MEDIA_RENAME_TEXT_DOMAIN'), 'phoenix_media_rename_strings', $translation_array);
 		}
 
 		if(get_current_screen()->id == 'settings_page_pmr-setting-admin') {
@@ -223,7 +229,7 @@ class Phoenix_Media_Rename {
 		global $wpdb;
 
 		//check if there are values in table
-		$result = $wpdb->get_var("SELECT " . $field . " FROM " . $wpdb->prefix . self::phoenix_media_rename_table_name);
+		$result = $wpdb->get_var("SELECT " . $field . " FROM " . $wpdb->prefix . constant('PHOENIX_MEDIA_RENAME_TABLE_NAME'));
 
 		return $result;
 	}
@@ -239,19 +245,19 @@ class Phoenix_Media_Rename {
 		global $wpdb;
 
 		//check if there are values in table
-		$records = $wpdb->get_var("SELECT IFNULL(COUNT(*), 0) FROM " . $wpdb->prefix . self::phoenix_media_rename_table_name);
+		$records = $wpdb->get_var("SELECT IFNULL(COUNT(*), 0) FROM " . $wpdb->prefix . constant('PHOENIX_MEDIA_RENAME_TABLE_NAME'));
 
 		if ($records > 1){
 			//error in table content, truncate table to reset data
 			$wpdb->query(
 				$wpdb->prepare(
-					"TRUNCATE TABLE " . $wpdb->prefix . self::phoenix_media_rename_table_name
+					"TRUNCATE TABLE " . $wpdb->prefix . constant('PHOENIX_MEDIA_RENAME_TABLE_NAME')
 				)
 			);
 		}elseif ($records == 0){
 			//table is empty, insert new row
 			$wpdb->insert(
-				$wpdb->prefix . self::phoenix_media_rename_table_name, 
+				$wpdb->prefix . constant('PHOENIX_MEDIA_RENAME_TABLE_NAME'),
 				array(
 					$field => $value, 
 				)
@@ -259,7 +265,7 @@ class Phoenix_Media_Rename {
 		} else {
 			//table contains a record, update data
 			$wpdb->update(
-				$wpdb->prefix . self::phoenix_media_rename_table_name, 
+				$wpdb->prefix . constant('PHOENIX_MEDIA_RENAME_TABLE_NAME'), 
 				array(
 					$field => $value, 
 				),
@@ -648,7 +654,7 @@ class Phoenix_Media_Rename {
 				//rename file
 				$error_message = self::rename_files($options, $post->ID, $file_info);
 
-				if ( $error_message != ''){
+				if ($error_message != ''){
 					//filename failed: block the post update process
 					return $error_message;
 				}
@@ -977,7 +983,7 @@ class Phoenix_Media_Rename {
 			'samesite' => 'Strict'
 			);
 
-		setcookie($name, $value, $cookie_options);
+		@setcookie($name, $value, $cookie_options);
 	}
 
 	/**
