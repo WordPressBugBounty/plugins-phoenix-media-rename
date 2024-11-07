@@ -146,11 +146,18 @@ class PhoenixMediaRename {
 			this.type = document.querySelector('#bulk-action-selector-top').value;
 		}
 
+		if (this.type == '-1'){
+			//no action selected, notify user and exit
+			alert('No bulk action selected.\nPlease select a bulk action before pressing the "Apply" button.');
+			return;
+		}
+
 		// Check if action is valid
 		const validActions = ['rename', 'rename_retitle', 'retitle', 'retitle_from_post_title', 
 							'rename_from_post_title', 'rename_retitle_from_post_title'];
 		
 		if (!this.isMediaSingle && !validActions.includes(this.type)) {
+			//no Phoenix Media Rename action selected, exit
 			return;
 		}
 
